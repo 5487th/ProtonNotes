@@ -13,8 +13,7 @@ engine = QQmlApplicationEngine()
 notes_manager: NotesManager = NotesManager()
 
 side_bar_manager = SideBarManager(app, notes_manager)
-engine.rootContext().setContextProperty("SideBarManager", side_bar_manager)
-
+engine.rootContext().setContextProperty("sideBarManager", side_bar_manager)
 
 engine.load("ui/Main.qml")
 sys.exit(app.exec())
