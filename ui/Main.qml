@@ -218,6 +218,7 @@ ApplicationWindow {
 
                     TextArea{
                         id:noteEditor
+                        wrapMode: TextEdit.Wrap
                         
                         color:"#000000"
 
