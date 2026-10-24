@@ -1,5 +1,6 @@
 from peewee import Model, SqliteDatabase, AutoField, TextField
 from pathlib import Path
+from PySide6.QtCore import QStandardPaths
 
 
 class Note(Model):
@@ -10,7 +11,8 @@ class Note(Model):
 
 class NotesManager:
     def __init__(self):
-        self.database_path = Path("data") / "notes.db"
+        base = Path(QStandardPaths.writableLocation(QStandardPaths.AppDataLocation))
+        self.database_path = base / "notes.db"
 
         self.database_path.parent.mkdir(parents=True, exist_ok=True)
 
