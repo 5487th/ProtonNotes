@@ -190,8 +190,7 @@ ApplicationWindow {
 
                 Rectangle{
                     Layout.fillWidth:true
-                    Layout.fillHeight:true
-                    Layout.verticalStretchFactor:1
+                    Layout.preferredHeight: 50 
                     color:"#F0F2F8"
                     Rectangle{
                         color:"#DCE1EB"
@@ -211,26 +210,32 @@ ApplicationWindow {
                         font.family: "Inter"
                     }
                 }
-
-                TextArea{
-                    id:noteEditor
+                ScrollView{
                     Layout.fillHeight:true
                     Layout.fillWidth:true
                     Layout.verticalStretchFactor:35
-                    color:"#000000"
+                    clip:true
 
-                    placeholderText: "type something...."
-                    font.pixelSize:16
-                    
-                    //qmllint disable unqualified 
-                    text:win.selectedNoteId == -1 ? "" : sideBarManager.get_note_content(win.selectedNoteId) 
-                    onTextChanged: {
-                        if(win.selectedNoteId !== -1){
-                            sideBarManager.set_note_content(win.selectedNoteId, text)
+                    TextArea{
+                        id:noteEditor
+                        
+                        color:"#000000"
+                        textFormat: TextEdit.MarkdownText
+
+                        placeholderText: "type something...."
+                        font.pixelSize:16
+
+                        //qmllint disable unqualified 
+                        text:win.selectedNoteId == -1 ? "" : sideBarManager.get_note_content(win.selectedNoteId) 
+                        onTextChanged: {
+                            if(win.selectedNoteId !== -1){
+                                sideBarManager.set_note_content(win.selectedNoteId, text)
+                            }
                         }
+                        //qmllint enable unqualified
                     }
-                    //qmllint enable unqualified
                 }
+               
             }
         }
        
