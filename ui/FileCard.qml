@@ -6,6 +6,7 @@ Rectangle{
     id:root
     property string note_name
     property int note_id
+    property bool selected: false
 
     signal renameRequested(int id)
     signal deleteRequested(int id)
@@ -13,8 +14,8 @@ Rectangle{
 
 
     height:40
-    color: '#F8F9FC'
-    border.color: "#DCE1EB"
+    color: selected ? '#E6EDFC' : '#F8F9FC'
+    border.color: selected ? '#3c6cda' : "#DCE1EB"
     radius:10
     
     TapHandler {
@@ -83,6 +84,7 @@ Rectangle{
             Layout.rightMargin:5
 
             color: mouseArea.containsMouse || menu.opened ? "#F0F2F8" : '#00ffffff'
+
             radius:10
 
 

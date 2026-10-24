@@ -15,6 +15,7 @@ ApplicationWindow {
     property int selectedNoteId: -1
     property string selectedNoteName: ""
 
+    property bool previewMode: false
 
     readonly property bool dialogOpen: newNoteDialog.visible
                                    || renameDialog.visible
@@ -157,9 +158,14 @@ ApplicationWindow {
 
                         note_id:noteID
                         note_name:noteName
+
+                        // qmllint disable unqualified 
+                        selected: win.selectedNoteId===noteID
+                        //qmllint enable unqualified 
+
                         width:ListView.view.width
 
-                        //qmllint disable unqualified 
+                       // qmllint disable unqualified 
                         onRenameRequested: (id) => renameDialog.open(id, noteName)
                         //qmllint enable unqualified 
 
@@ -192,6 +198,7 @@ ApplicationWindow {
                     Layout.fillWidth:true
                     Layout.preferredHeight: 50 
                     color:"#F0F2F8"
+
                     Rectangle{
                         color:"#DCE1EB"
                         height:3
@@ -199,43 +206,140 @@ ApplicationWindow {
                         anchors.bottom:parent.bottom
                     }
 
-                    Text{
-                        id: noteTittleDisplay
-                        text: win.selectedNoteId == -1 ? "Open a note" : win.selectedNoteName
-                        anchors.left:parent.left
-                        anchors.verticalCenter:parent.verticalCenter
+                    RowLayout{
+                        anchors.fill:parent
 
-                        anchors.leftMargin:10
-                        font.pixelSize:16
-                        font.family: "Inter"
-                    }
-                }
-                ScrollView{
-                    Layout.fillHeight:true
-                    Layout.fillWidth:true
-                    Layout.verticalStretchFactor:35
-                    clip:true
+                        Text{
+                            id: noteTittleDisplay
+                            text: win.selectedNoteId == -1 ? "Open a note" : win.selectedNoteName
 
-                    TextArea{
-                        id:noteEditor
-                        wrapMode: TextEdit.Wrap
-                        
-                        color:"#000000"
+                            Layout.leftMargin: 8
+                            Layout.rightMargin: 6
 
-                        placeholderText: "type something...."
-                        font.pixelSize:16
+                            Layout.alignment: Qt.AlignVCenter
 
-                        //qmllint disable unqualified 
-                        text:win.selectedNoteId == -1 ? "" : sideBarManager.get_note_content(win.selectedNoteId) 
-                        onTextChanged: {
-                            if(win.selectedNoteId !== -1){
-                                sideBarManager.set_note_content(win.selectedNoteId, text)
-                            }
+                            font.pixelSize:16
+                            font.family: "Inter"
                         }
-                        //qmllint enable unqualified
+
+                        Rectangle{
+                            Layout.fillHeight:true
+
+                            Layout.topMargin:8
+                            Layout.bottomMargin:8
+
+                            radius:4
+                            width:3
+
+                            color: "#DCE1EB"
+                        }
+                        
+                        Button {
+                            id: previewBtn
+                            display: AbstractButton.IconOnly
+                            icon.source: win.previewMode ? "../assets/eye.svg" : "../assets/eye-off.svg"
+                            icon.width: 20
+                            icon.height: 20
+                            icon.color: "transparent"
+
+                            padding: 0
+                            Layout.preferredWidth: 30
+                            Layout.preferredHeight: 30
+                            Layout.leftMargin: 6
+                            Layout.alignment: Qt.AlignVCenter
+
+                            hoverEnabled: true
+                            scale: pressed ? 0.95 : 1.0
+
+                            background: Rectangle {
+                                color: previewBtn.hovered ? '#d6d8dd' : '#00faf7f7'
+                                radius: 10
+                            }
+
+                            HoverHandler { cursorShape: Qt.PointingHandCursor }
+
+                            onClicked: win.previewMode = !win.previewMode
+                        }   
+
+                        Item{Layout.fillWidth:true}
                     }
                 }
-               
+
+                StackLayout {
+                    Layout.fillWidth:true
+                    Layout.fillHeight:true
+
+                    Layout.verticalStretchFactor: 35
+                    currentIndex: win.previewMode ? 1 : 0
+
+                    ScrollView{
+                        clip:true
+
+                        TextArea{
+                            id:noteEditor
+                            wrapMode: TextEdit.Wrap
+
+                            color:"#000000"
+
+                            placeholderText: "type something...."
+                            font.pixelSize:16
+
+                            //qmllint disable unqualified 
+                            text:win.selectedNoteId == -1 ? "" : sideBarManager.get_note_content(win.selectedNoteId) 
+                            onTextChanged: {
+                                if(win.selectedNoteId !== -1){
+                                    sideBarManager.set_note_content(win.selectedNoteId, text)
+                                }
+                            }
+                            //qmllint enable unqualified
+                        }
+                    }
+
+                    ScrollView{
+                        clip:true
+
+                        TextArea{
+                            readOnly:true
+                            textFormat : TextEdit.MarkdownText
+                            wrapMode: TextEdit.Wrap
+                            color:"#000000"
+                            font.pixelSize:16
+
+                            background:null
+
+                            function toPreview(src) {
+                                 let out = []
+                                 let inFence = false
+                                 let blankRun = 0
+
+                                 for (const line of src.split("\n")) {
+                                     if (line.trim().startsWith("```")) {
+                                         inFence = !inFence
+                                         blankRun = 0
+                                         out.push(line)
+                                     } else if (inFence) {
+                                         out.push(line)                 
+                                     } else if (line.trim() === "") {
+                                         blankRun++
+                                         out.push("")                    
+                                         if (blankRun > 1) {
+                                             out.push("&nbsp;")         
+                                             out.push("")
+                                         }
+                                     } else {
+                                         blankRun = 0
+                                         out.push(line + "  ")         
+                                     }
+                                 }
+                                 return out.join("\n")
+                            }
+
+                            text: toPreview(noteEditor.text)
+
+                            onLinkActivated: (link) => Qt.openUrlExternally(link)
+                        }
+                    }
+                }
             }
         }
        
@@ -413,6 +517,9 @@ ApplicationWindow {
             sideBarManager.rename_note(noteId, name)
             //qmllint enable unqualified
 
+            if (win.selectedNoteId === noteId)
+                win.selectedNoteName = name
+
             close()
         }
 
@@ -535,7 +642,9 @@ ApplicationWindow {
                         enabled: renameConfirmBtn.enabled
                         cursorShape: Qt.PointingHandCursor
                     }
-                    onClicked: renameDialog.submit()
+                    onClicked: {
+                        renameDialog.submit()
+                    }
                 }
 
             }
@@ -559,6 +668,11 @@ ApplicationWindow {
         property string noteName:""
 
         function submit(){
+            if (win.selectedNoteId === noteId) {
+                win.selectedNoteId = -1
+                win.selectedNoteName = ""
+            }
+
             //qmllint disable unqualified
             sideBarManager.delete_note(noteId)
             //qmllint enable unqualified
