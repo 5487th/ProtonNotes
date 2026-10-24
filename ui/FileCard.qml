@@ -9,6 +9,7 @@ Rectangle{
 
     signal renameRequested(int id)
     signal deleteRequested(int id)
+    signal clicked(int id, string name)
 
 
     height:40
@@ -16,6 +17,12 @@ Rectangle{
     border.color: "#DCE1EB"
     radius:10
     
+    TapHandler {
+        onTapped: root.clicked(root.note_id, root.note_name)
+    }
+
+    HoverHandler { cursorShape: Qt.PointingHandCursor }
+
     component MenuEntry: MenuItem {
         id: entry
         property color textColor: "#243653"
@@ -32,6 +39,7 @@ Rectangle{
             verticalAlignment: Text.AlignVCenter
             leftPadding: 8
         }
+
         background: Rectangle {
             color: entry.hovered ? "#F0F2F8" : "transparent"
             radius: 6

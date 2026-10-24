@@ -54,3 +54,11 @@ class SideBarManager(QObject):
     def delete_note(self, id):
         self.notes_manager.delete_note(id)
         self.refresh_side_bar()
+
+    @Slot(int, result=str)
+    def get_note_content(self, id):
+        return self.notes_manager.get_content(id)
+
+    @Slot(int, str)
+    def set_note_content(self, id, content):
+        self.notes_manager.update_content(id, content)

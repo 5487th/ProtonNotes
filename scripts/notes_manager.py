@@ -44,6 +44,12 @@ class NotesManager:
         except Note.DoesNotExist:
             return False
 
+    def get_content(self, id):
+        try:
+            return Note.get(Note.id == id).content
+        except Note.DoesNotExist:
+            return None
+
     def update_content(self, id, new_content):
         try:
             note = Note.get(Note.id == id)

@@ -1,6 +1,7 @@
 ﻿import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Effects
 
 ApplicationWindow {
     id: win
@@ -10,15 +11,33 @@ ApplicationWindow {
     minimumWidth: 800; minimumHeight: 600
 
     flags: Qt.Window    
-   
+    
+    property int selectedNoteId: -1
+    property string selectedNoteName: ""
+
+
+    readonly property bool dialogOpen: newNoteDialog.visible
+                                   || renameDialog.visible
+                                   || deleteDialog.visible
+
+
     SplitView{
         anchors.fill: parent
         orientation: Qt.Horizontal
 
+        enabled: !win.dialogOpen
+
+        layer.enabled: win.dialogOpen
+        layer.effect: MultiEffect {
+            blurEnabled: true
+            blur: 1.0
+            blurMax: 32
+        }
+
         handle: Rectangle {
-                implicitWidth:3
-                color: "#DCE1EB"
-            }
+            implicitWidth:3
+            color: "#DCE1EB"
+        }
 
         //side bar
         Rectangle{
@@ -148,6 +167,13 @@ ApplicationWindow {
                         onDeleteRequested: (id) => deleteDialog.open(id, noteName)
                         //qmllint enable unqualified 
 
+                        //qmllint disable unqualified 
+                        onClicked: (id, name) => {
+                            win.selectedNoteId=id
+                            win.selectedNoteName = name
+                        }
+                        //qmllint enable unqualified 
+
                     }
                 }
             }
@@ -159,11 +185,58 @@ ApplicationWindow {
             SplitView.minimumWidth:450
             color: '#F8F9FC'
             
-          
+            ColumnLayout{
+                anchors.fill: parent
+
+                Rectangle{
+                    Layout.fillWidth:true
+                    Layout.fillHeight:true
+                    Layout.verticalStretchFactor:1
+                    color:"#F0F2F8"
+                    Rectangle{
+                        color:"#DCE1EB"
+                        height:3
+                        width:parent.width
+                        anchors.bottom:parent.bottom
+                    }
+
+                    Text{
+                        id: noteTittleDisplay
+                        text: win.selectedNoteId == -1 ? "Open a note" : win.selectedNoteName
+                        anchors.left:parent.left
+                        anchors.verticalCenter:parent.verticalCenter
+
+                        anchors.leftMargin:10
+                        font.pixelSize:16
+                        font.family: "Inter"
+                    }
+                }
+
+                TextArea{
+                    id:noteEditor
+                    Layout.fillHeight:true
+                    Layout.fillWidth:true
+                    Layout.verticalStretchFactor:35
+                    color:"#000000"
+
+                    placeholderText: "type something...."
+                    font.pixelSize:16
+                    
+                    //qmllint disable unqualified 
+                    text:win.selectedNoteId == -1 ? "" : sideBarManager.get_note_content(win.selectedNoteId) 
+                    onTextChanged: {
+                        if(win.selectedNoteId !== -1){
+                            sideBarManager.set_note_content(win.selectedNoteId, text)
+                        }
+                    }
+                    //qmllint enable unqualified
+                }
+            }
         }
        
     }
     
+   
     //new note dialogue
     Rectangle{
         id: newNoteDialog
