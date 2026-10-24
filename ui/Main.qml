@@ -220,7 +220,6 @@ ApplicationWindow {
                         id:noteEditor
                         
                         color:"#000000"
-                        textFormat: TextEdit.MarkdownText
 
                         placeholderText: "type something...."
                         font.pixelSize:16
