@@ -34,13 +34,15 @@ pip install PySide6 peewee
 
 ## Running
 
-Run from the project root, since asset and data paths are relative:
-
 ```bash
 python main.py
 ```
 
-On first launch the app creates `data/notes.db` automatically.
+On first launch the app creates its database automatically in your user data folder:
+
+- Windows: `%APPDATA%\ProtonNotes\notes.db`
+- Linux: `~/.local/share/ProtonNotes/notes.db`
+- macOS: `~/Library/Application Support/ProtonNotes/notes.db`
 
 ## Project structure
 
@@ -48,8 +50,6 @@ On first launch the app creates `data/notes.db` automatically.
 .
 ├── main.py                     # App entry point, sets up the QML engine
 ├── assets/                     # Icons (search, file, eye, dots, app icon, ...)
-├── data/
-│   └── notes.db                # SQLite database (created on first run)
 ├── scripts/
 │   ├── notes_manager.py        # Database layer (peewee model + CRUD)
 │   └── side_bar_manager.py     # QObject exposed to QML as `sideBarManager`
@@ -79,7 +79,3 @@ On first launch the app creates `data/notes.db` automatically.
 
 - Qt's Markdown renderer has no syntax highlighting for code blocks and limited control over paragraph spacing.
 - Each keystroke triggers a database write. This is fine for small notes but could be debounced for large ones.
-
-## License
-
-MIT
