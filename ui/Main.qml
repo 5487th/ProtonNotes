@@ -10,12 +10,27 @@ ApplicationWindow {
     width: 800; height: 600
     minimumWidth: 800; minimumHeight: 600
 
-    flags: Qt.Window    
-    
     property int selectedNoteId: -1
     property string selectedNoteName: ""
 
     property bool previewMode: false
+
+    property int lastVisibility: Window.Windowed
+    property bool maximizedBeforeMinimize: false
+
+    onVisibilityChanged: (v) => {
+        if (v === Window.Minimized && lastVisibility === Window.Maximized) {
+            maximizedBeforeMinimize = true
+        } else if (v === Window.Windowed
+                   && lastVisibility === Window.Minimized
+                   && maximizedBeforeMinimize) {
+            maximizedBeforeMinimize = false
+            showMaximized()
+        } else if (v !== Window.Minimized) {
+            maximizedBeforeMinimize = false
+        }
+        lastVisibility = v
+    }
 
     readonly property bool dialogOpen: newNoteDialog.visible
                                    || renameDialog.visible
@@ -29,10 +44,14 @@ ApplicationWindow {
         enabled: !win.dialogOpen
 
         layer.enabled: win.dialogOpen
+        layer.smooth: true
+
         layer.effect: MultiEffect {
             blurEnabled: true
             blur: 1.0
             blurMax: 32
+
+            autoPaddingEnabled:false
         }
 
         handle: Rectangle {
@@ -44,7 +63,7 @@ ApplicationWindow {
         Rectangle{
             color: "#F0F2F8"
             SplitView.minimumWidth:230
-
+            
             ColumnLayout
             {
                 anchors.fill:parent
@@ -55,11 +74,20 @@ ApplicationWindow {
                     text: "Proton Notes"
                     Layout.fillWidth: true
                     topPadding:15
+                    bottomPadding:15
                     leftPadding:15
                     
                     font.pixelSize : 18
                     font.family : "Inter"
                     color : "#000000"
+
+                    background: Rectangle{
+                        color:"transparent"
+                        DragHandler {
+                            target: null
+                            onActiveChanged: if (active) win.startSystemMove()
+                        }
+                    }
                 }
 
                 //search and add note
@@ -199,6 +227,13 @@ ApplicationWindow {
                     Layout.preferredHeight: 50 
                     color:"#F0F2F8"
 
+                    //allows the window to be dragged
+                    DragHandler {
+                        target: null
+                        onActiveChanged: if (active) win.startSystemMove()
+                    }
+
+                    //separator between text editor and top bar
                     Rectangle{
                         color:"#DCE1EB"
                         height:3
@@ -262,6 +297,93 @@ ApplicationWindow {
                         }   
 
                         Item{Layout.fillWidth:true}
+
+                        Button{
+                            //qmllint disable unqualified
+                            icon.source: "../assets/minus.svg"
+                            //qmllint enable unqualified
+
+                            display: AbstractButton.IconOnly
+                            icon.width: 16
+                            icon.height: 16
+                            icon.color:"transparent"
+                            padding: 0
+
+                            
+                            Layout.alignment:Qt.AlignVCenter
+                            Layout.rightMargin:10
+
+                            Layout.preferredWidth:20
+                            Layout.preferredHeight:20
+                            background:null
+
+                            MouseArea {
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+
+                                onClicked: win.showMinimized()
+                            }
+                        }
+
+                        Button{
+                            //qmllint disable unqualified
+                            icon.source: win.visibility === Window.Maximized ? "../assets/squares.svg" : "../assets/square.svg"
+                            //qmllint enable unqualified
+
+                            display: AbstractButton.IconOnly
+                            icon.width: 13
+                            icon.height: 13
+                            icon.color:"transparent"
+                            padding: 0
+
+                            
+                            Layout.alignment:Qt.AlignVCenter
+                            Layout.rightMargin:10
+
+                            Layout.preferredWidth:20
+                            Layout.preferredHeight:20
+                            background:null
+
+                            MouseArea {
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+
+                                onClicked: win.visibility === Window.Maximized ? win.showNormal() : win.showMaximized()
+                            }
+
+                        }
+                        
+                        Button{
+                            //qmllint disable unqualified
+                            icon.source: "../assets/close.svg"
+                            //qmllint enable unqualified
+
+                            display: AbstractButton.IconOnly
+                            icon.width: 18
+                            icon.height: 18
+                            icon.color:"transparent"
+                            padding: 0
+
+                            
+                            Layout.alignment:Qt.AlignVCenter
+                            Layout.rightMargin:15
+
+                            Layout.preferredWidth:20
+                            Layout.preferredHeight:20
+                            background:null
+
+                            MouseArea {
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+
+                                onClicked: win.close()
+                            }
+
+                        }
+                        
                     }
                 }
 
@@ -345,7 +467,7 @@ ApplicationWindow {
        
     }
     
-   
+    
     //new note dialogue
     Rectangle{
         id: newNoteDialog
